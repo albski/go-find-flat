@@ -1,24 +1,25 @@
 package main
 
-import (
-	"strings"
-)
-
 func startIndexStrOccurencies(str string, substr string) []int {
 	if len(substr) == 0 {
 		return []int{}
 	}
 
 	indexes := make([]int, 0)
-	offset := 0
 
-	for {
-		index := strings.Index(str[offset:], substr)
-		if index == -1 {
-			break
+	runeStr := []rune(str)
+	runeSubstr := []rune(substr)
+	strLen := len(runeStr)
+	substrLen := len(runeSubstr)
+
+	offset := 0
+	for offset <= strLen-substrLen {
+		if string(runeStr[offset:offset+substrLen]) == string(runeSubstr) {
+			indexes = append(indexes, offset)
+			offset += substrLen
+		} else {
+			offset++
 		}
-		indexes = append(indexes, offset+index)
-		offset += index + len(substr)
 	}
 
 	return indexes
