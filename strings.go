@@ -1,6 +1,6 @@
 package main
 
-func startIndexStrOccurencies(str string, substr string) []int {
+func startIndexStrOccurs(str string, substr string) []int {
 	if len(substr) == 0 {
 		return []int{}
 	}

@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-func TestStartIndexStrOccurencies(t *testing.T) {
+func TestStartIndexStrOccurs(t *testing.T) {
 	text := "złzłzłz"
 	substr := "zł"
 
-	result := startIndexStrOccurencies(text, substr)
+	result := startIndexStrOccurs(text, substr)
 	expected := []int{0, 2, 4}
 
 	if !reflect.DeepEqual(result, expected) {
