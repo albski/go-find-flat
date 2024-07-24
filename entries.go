@@ -28,25 +28,40 @@ func NewEntriesManager(filePath string) (*EntriesManager, error) {
 	return manager, nil
 }
 
-func (m *EntriesManager) updateEntryNoSave(url string) {
-	e, idx := m.ExistsEntry(url)
-	if !e {
-		m.entries = append(m.entries, Entry{URL: url, Prices: []string{}})
-	} else {
-		m.entries = append(m.entries[:idx], m.entries[idx+1:]...)
+func (m *EntriesManager) UpdateEntries(newUrls []string) error {
+	for _, url := range newUrls {
+		e, _ := m.ExistsEntry(url)
+		if !e {
+			m.entries = append(m.entries, Entry{URL: url, Prices: []string{}})
+		}
 	}
-}
 
-func (m *EntriesManager) UpdateEntries(urls []string) error {
-	for _, url := range urls {
-		m.updateEntryNoSave(url)
+	newUrlSet := make(map[string]struct{}, len(newUrls))
+	for _, url := range newUrls {
+		newUrlSet[url] = struct{}{}
 	}
+
+	updatedEntries := m.entries[:0]
+	for _, entry := range m.entries {
+		if _, exists := newUrlSet[entry.URL]; exists {
+			updatedEntries = append(updatedEntries, entry)
+		}
+	}
+	m.entries = updatedEntries
 
 	return m.saveToFile()
 }
 
 func (m *EntriesManager) GetEntries() Entries {
 	return m.entries
+}
+
+func (m *EntriesManager) GetEntriesURLs() []string {
+	urls := make([]string, len(m.entries))
+	for _, entry := range m.entries {
+		urls = append(urls, entry.URL)
+	}
+	return urls
 }
 
 func (m *EntriesManager) ExistsEntry(url string) (exists bool, index int) {
