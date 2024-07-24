@@ -2,9 +2,10 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"unicode"
+
+	"github.com/joho/godotenv"
 )
 
 func getFlatPricesFromSite(textContent string) []string {
@@ -12,7 +13,7 @@ func getFlatPricesFromSite(textContent string) []string {
 
 	currNotationStartIndexes := startIndexStrOccurs(textContent, currNotation)
 	if len(currNotationStartIndexes) == 0 {
-		log.Printf("No `%s` has been found on site with textContent[:100] of %s", currNotation, textContent[:100])
+		log.Printf("No `%s` has been found on site which textContent[:100] is %s", currNotation, textContent[:100])
 	}
 
 	validatePrice := func(s string) (bool, string) {
@@ -61,13 +62,24 @@ func getFlatPricesFromSite(textContent string) []string {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("error loading .env file: %v", err)
+	}
+
+	tele, err := NewTelegramBot()
+	if err != nil {
+		log.Fatalf("telegram bot failed to load: %v", err)
+	}
+
 	sp := NewScraper()
-	rdr := sp.getTextContent("https://www.olx.pl/nieruchomosci/mieszkania/poznan/q-polanka/?search%5Bfilter_float_price%3Ato%5D=2400&search%5Border%5D=created_at%3Adesc")
+	rdr := sp.getTextContent("https://www.otodom.pl/pl/oferta/kawalerka-polanka-ul-katowicka-bezposrednio-ID4mDk3.html")
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rdr)
 
 	str := buf.String()
 
 	prices := getFlatPricesFromSite(str)
-	fmt.Println(prices)
+	firstPrice := string(prices[0])
+	tele.SendMessage(firstPrice)
 }
