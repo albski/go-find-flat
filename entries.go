@@ -35,6 +35,12 @@ func (m *EntriesManager) AddEntry(entry Entry) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	for _, existingEntry := range m.entries {
+		if existingEntry.URL == entry.URL {
+			return errors.New("entry with the same URL already exists")
+		}
+	}
+
 	m.entries = append(m.entries, entry)
 	return m.saveToFile()
 }
