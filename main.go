@@ -2,9 +2,9 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -23,10 +23,16 @@ func main() {
 		log.Fatalf("ENTRIES_URLS_GIST_ID failed to load from .env")
 	}
 
-	tele, err := NewTelegramBot()
-	if err != nil {
-		log.Fatalf("telegram bot failed to load: %v", err)
+	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	chatIDStr := os.Getenv("TELEGRAM_CHAT_ID")
+	if botToken == "" || chatIDStr == "" {
+		log.Fatalf("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set in environment variables")
 	}
+	chatID, err := strconv.Atoi(chatIDStr)
+	if err != nil {
+		log.Fatalf("invalid TELEGRAM_CHAT_ID: %v", err)
+	}
+	tele := NewTelegramBot(botToken, chatID)
 
 	sp := NewScraper()
 
@@ -38,9 +44,7 @@ func main() {
 	for {
 		gistContent, _ := fetchLatestGist(gistID)
 		urls := strings.Split(gistContent, "\n")
-		fmt.Println(urls)
 		m.UpdateEntries(urls)
-		fmt.Println(m.GetEntries())
 
 		entries := m.GetEntries()
 		for _, entry := range entries {

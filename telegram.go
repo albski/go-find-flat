@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"strconv"
 )
 
 type TelegramBot struct {
@@ -19,20 +17,8 @@ type SendMessageRequest struct {
 	Text   string `json:"text"`
 }
 
-func NewTelegramBot() (*TelegramBot, error) {
-	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
-	chatIDStr := os.Getenv("TELEGRAM_CHAT_ID")
-
-	if botToken == "" || chatIDStr == "" {
-		return nil, fmt.Errorf("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set in environment variables")
-	}
-
-	chatID, err := strconv.Atoi(chatIDStr)
-	if err != nil {
-		return nil, fmt.Errorf("invalid TELEGRAM_CHAT_ID: %v", err)
-	}
-
-	return &TelegramBot{BotToken: botToken, ChatID: chatID}, nil
+func NewTelegramBot(botToken string, chatID int) *TelegramBot {
+	return &TelegramBot{BotToken: botToken, ChatID: chatID}
 }
 
 func (tb *TelegramBot) SendMessage(message string) error {
