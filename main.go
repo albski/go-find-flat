@@ -2,7 +2,11 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
+	"os"
+	"strings"
+	"time"
 	"unicode"
 
 	"github.com/joho/godotenv"
@@ -14,21 +18,42 @@ func main() {
 		log.Fatalf("error loading .env file: %v", err)
 	}
 
+	gistID := os.Getenv("ENTRIES_URLS_GIST_ID")
+	if len(gistID) == 0 {
+		log.Fatalf("ENTRIES_URLS_GIST_ID failed to load from .env")
+	}
+
 	tele, err := NewTelegramBot()
 	if err != nil {
 		log.Fatalf("telegram bot failed to load: %v", err)
 	}
 
 	sp := NewScraper()
-	rdr := sp.getTextContent("https://www.otodom.pl/pl/oferta/kawalerka-polanka-ul-katowicka-bezposrednio-ID4mDk3.html")
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rdr)
 
-	str := buf.String()
+	m, err := NewEntriesManager("entries.json")
+	if err != nil {
+		log.Fatalf("entries manager failed to init: %v", err)
+	}
 
-	prices := getFlatPricesFromSite(str)
-	firstPrice := string(prices[0])
-	tele.SendMessage(firstPrice)
+	for {
+		gistContent, _ := fetchLatestGist(gistID)
+		urls := strings.Split(gistContent, "\n")
+		fmt.Println(urls)
+		m.UpdateEntries(urls)
+		fmt.Println(m.GetEntries())
+
+		entries := m.GetEntries()
+		for _, entry := range entries {
+			rdr := sp.getTextContent(entry.URL)
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(rdr)
+			str := buf.String()
+			prices := getFlatPricesFromSite(str)
+			firstPrice := prices[0]
+			tele.SendMessage(firstPrice)
+		}
+		time.Sleep(300 * time.Second)
+	}
 }
 
 func getFlatPricesFromSite(textContent string) []string {
