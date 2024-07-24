@@ -2,20 +2,17 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"os"
-	"sync"
 )
 
 type Entry struct {
-	URL    string `json:"url"`
-	Prices []int  `json:"prices"`
+	URL    string   `json:"url"`
+	Prices []string `json:"prices"`
 }
 
 type Entries []Entry
 
 type EntriesManager struct {
-	mu       sync.RWMutex
 	entries  Entries
 	filePath string
 }
@@ -31,35 +28,24 @@ func NewEntriesManager(filePath string) (*EntriesManager, error) {
 	return manager, nil
 }
 
-func (m *EntriesManager) AddEntry(entry Entry) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	e, _ := m.ExistsEntry(entry.URL)
-	if e {
-		return errors.New("entry with the same URL already exists")
-	}
-
-	m.entries = append(m.entries, entry)
-	return m.saveToFile()
-}
-
-func (m *EntriesManager) RemoveEntry(url string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
+func (m *EntriesManager) updateEntryNoSave(url string) {
 	e, idx := m.ExistsEntry(url)
 	if !e {
-		return errors.New("entry not found")
+		m.entries = append(m.entries, Entry{URL: url, Prices: []string{}})
+	} else {
+		m.entries = append(m.entries[:idx], m.entries[idx+1:]...)
 	}
-	m.entries = append(m.entries[:idx], m.entries[idx+1:]...)
+}
+
+func (m *EntriesManager) UpdateEntries(urls []string) error {
+	for _, url := range urls {
+		m.updateEntryNoSave(url)
+	}
+
 	return m.saveToFile()
 }
 
 func (m *EntriesManager) GetEntries() Entries {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	return m.entries
 }
 
@@ -73,9 +59,6 @@ func (m *EntriesManager) ExistsEntry(url string) (exists bool, index int) {
 }
 
 func (m *EntriesManager) ToJSON() (string, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	jsonData, err := json.Marshal(m.entries)
 	if err != nil {
 		return "", err
@@ -84,9 +67,6 @@ func (m *EntriesManager) ToJSON() (string, error) {
 }
 
 func (m *EntriesManager) FromJSON(jsonData string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	var entries Entries
 	err := json.Unmarshal([]byte(jsonData), &entries)
 	if err != nil {
@@ -97,9 +77,6 @@ func (m *EntriesManager) FromJSON(jsonData string) error {
 }
 
 func (m *EntriesManager) loadFromFile() error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	if _, err := os.Stat(m.filePath); os.IsNotExist(err) {
 		return m.saveToFile()
 	}
