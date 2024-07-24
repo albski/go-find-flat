@@ -8,6 +8,29 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("error loading .env file: %v", err)
+	}
+
+	tele, err := NewTelegramBot()
+	if err != nil {
+		log.Fatalf("telegram bot failed to load: %v", err)
+	}
+
+	sp := NewScraper()
+	rdr := sp.getTextContent("https://www.otodom.pl/pl/oferta/kawalerka-polanka-ul-katowicka-bezposrednio-ID4mDk3.html")
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rdr)
+
+	str := buf.String()
+
+	prices := getFlatPricesFromSite(str)
+	firstPrice := string(prices[0])
+	tele.SendMessage(firstPrice)
+}
+
 func getFlatPricesFromSite(textContent string) []string {
 	const currNotation = "zł"
 
@@ -59,27 +82,4 @@ func getFlatPricesFromSite(textContent string) []string {
 	}
 
 	return prices
-}
-
-func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("error loading .env file: %v", err)
-	}
-
-	tele, err := NewTelegramBot()
-	if err != nil {
-		log.Fatalf("telegram bot failed to load: %v", err)
-	}
-
-	sp := NewScraper()
-	rdr := sp.getTextContent("https://www.otodom.pl/pl/oferta/kawalerka-polanka-ul-katowicka-bezposrednio-ID4mDk3.html")
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rdr)
-
-	str := buf.String()
-
-	prices := getFlatPricesFromSite(str)
-	firstPrice := string(prices[0])
-	tele.SendMessage(firstPrice)
 }
