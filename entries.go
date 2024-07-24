@@ -35,10 +35,9 @@ func (m *EntriesManager) AddEntry(entry Entry) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	for _, existingEntry := range m.entries {
-		if existingEntry.URL == entry.URL {
-			return errors.New("entry with the same URL already exists")
-		}
+	e, _ := m.ExistsEntry(entry.URL)
+	if e {
+		return errors.New("entry with the same URL already exists")
 	}
 
 	m.entries = append(m.entries, entry)
@@ -49,13 +48,12 @@ func (m *EntriesManager) RemoveEntry(url string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	for i, entry := range m.entries {
-		if entry.URL == url {
-			m.entries = append(m.entries[:i], m.entries[i+1:]...)
-			return m.saveToFile()
-		}
+	e, idx := m.ExistsEntry(url)
+	if !e {
+		return errors.New("entry not found")
 	}
-	return errors.New("entry not found")
+	m.entries = append(m.entries[:idx], m.entries[idx+1:]...)
+	return m.saveToFile()
 }
 
 func (m *EntriesManager) GetEntries() Entries {
@@ -63,6 +61,15 @@ func (m *EntriesManager) GetEntries() Entries {
 	defer m.mu.Unlock()
 
 	return m.entries
+}
+
+func (m *EntriesManager) ExistsEntry(url string) (exists bool, index int) {
+	for i, entry := range m.entries {
+		if entry.URL == url {
+			return true, i
+		}
+	}
+	return false, -1
 }
 
 func (m *EntriesManager) ToJSON() (string, error) {
