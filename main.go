@@ -15,18 +15,18 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("error loading .env file: %v", err)
+		log.Printf("error loading .env file: %v", err)
 	}
 
 	gistID := os.Getenv("ENTRIES_URLS_GIST_ID")
 	if len(gistID) == 0 {
-		log.Fatalf("ENTRIES_URLS_GIST_ID failed to load from .env")
+		log.Fatalf("ENTRIES_URLS_GIST_ID failed to load from env variables")
 	}
 
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	chatIDStr := os.Getenv("TELEGRAM_CHAT_ID")
 	if botToken == "" || chatIDStr == "" {
-		log.Fatalf("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set in environment variables")
+		log.Fatalf("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set in env variables")
 	}
 	chatID, err := strconv.Atoi(chatIDStr)
 	if err != nil {
