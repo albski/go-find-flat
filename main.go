@@ -56,16 +56,19 @@ func main() {
 			buf.ReadFrom(rdr)
 			str := buf.String()
 
-			prices := getFlatPricesFromSite(str)
-			err := entry.SetEntryPrices(prices, m.SetEntry)
+			newPrices := getFlatPricesFromSite(str)
+			same := compareOccurs(entry.Prices, newPrices)
+			if same {
+				continue
+			}
+
+			tele.SendMessage(`change detected: ` + entry.URL)
+			err := entry.SetEntryPrices(newPrices, m.SetEntry)
 			if err != nil {
 				log.Print(err)
 			}
-
-			firstPrice := prices[0]
-			tele.SendMessage(firstPrice)
 		}
-		time.Sleep(300 * time.Second)
+		time.Sleep(20 * time.Second)
 	}
 }
 
