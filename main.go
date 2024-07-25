@@ -44,15 +44,25 @@ func main() {
 	for {
 		gistContent, _ := fetchLatestGist(gistID)
 		urls := strings.Split(gistContent, "\n")
-		m.UpdateEntries(urls)
+		m.UpdateEntriesOccurs(urls)
 
 		entries := m.GetEntries()
 		for _, entry := range entries {
 			rdr := sp.getTextContent(entry.URL)
+			if rdr == nil {
+				continue
+			}
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(rdr)
 			str := buf.String()
+
 			prices := getFlatPricesFromSite(str)
+			e := entry.SetEntryPrices(prices)
+			err := m.SetEntry(e)
+			if err != nil {
+				log.Print(err)
+			}
+
 			firstPrice := prices[0]
 			tele.SendMessage(firstPrice)
 		}

@@ -2,12 +2,18 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
 type Entry struct {
 	URL    string   `json:"url"`
 	Prices []string `json:"prices"`
+}
+
+func (e Entry) SetEntryPrices(prices []string) Entry {
+	e.Prices = prices
+	return e
 }
 
 type Entries []Entry
@@ -28,7 +34,7 @@ func NewEntriesManager(filePath string) (*EntriesManager, error) {
 	return manager, nil
 }
 
-func (m *EntriesManager) UpdateEntries(newUrls []string) error {
+func (m *EntriesManager) UpdateEntriesOccurs(newUrls []string) error {
 	for _, url := range newUrls {
 		e, _ := m.ExistsEntry(url)
 		if !e {
@@ -49,6 +55,16 @@ func (m *EntriesManager) UpdateEntries(newUrls []string) error {
 	}
 	m.entries = updatedEntries
 
+	return m.saveToFile()
+}
+
+func (m *EntriesManager) SetEntry(e Entry) error {
+	ok, idx := m.ExistsEntry(e.URL)
+	if !ok {
+		m.entries = append(m.entries, e)
+	} else {
+		m.entries[idx] = e
+	}
 	return m.saveToFile()
 }
 
@@ -108,6 +124,7 @@ func (m *EntriesManager) loadFromFile() error {
 
 func (m *EntriesManager) saveToFile() error {
 	jsonData, err := m.ToJSON()
+	fmt.Println(jsonData)
 	if err != nil {
 		return err
 	}
