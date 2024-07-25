@@ -57,8 +57,7 @@ func main() {
 			str := buf.String()
 
 			prices := getFlatPricesFromSite(str)
-			e := entry.SetEntryPrices(prices)
-			err := m.SetEntry(e)
+			err := entry.SetEntryPrices(prices, m.SetEntry)
 			if err != nil {
 				log.Print(err)
 			}

@@ -11,9 +11,13 @@ type Entry struct {
 	Prices []string `json:"prices"`
 }
 
-func (e Entry) SetEntryPrices(prices []string) Entry {
+func (e Entry) SetEntryPrices(prices []string, setEntry func(Entry) error) error {
 	e.Prices = prices
-	return e
+	err := setEntry(e)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type Entries []Entry
