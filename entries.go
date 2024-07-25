@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 )
 
@@ -128,7 +127,6 @@ func (m *EntriesManager) loadFromFile() error {
 
 func (m *EntriesManager) saveToFile() error {
 	jsonData, err := m.ToJSON()
-	fmt.Println(jsonData)
 	if err != nil {
 		return err
 	}
